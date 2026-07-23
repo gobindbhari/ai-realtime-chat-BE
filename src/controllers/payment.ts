@@ -5,16 +5,17 @@ import User from "../models/user.js";
 import crypto from "crypto";
 import { getIO } from "../lib/socket.js";
 import Razorpay from "razorpay";
+import { razorpay } from "../lib/razorpay.js";
 
 
 export const createOrder = async (
     req: Request,
     res: Response
 ) => {
-    const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET
-    });
+    // const razorpay = new Razorpay({
+    //     key_id: process.env.RAZORPAY_KEY_ID,
+    //     key_secret: process.env.RAZORPAY_SECRET
+    // });
 
     console.log("RAZORPAY_KEY_ID :==> ", process.env.RAZORPAY_KEY_ID);
     console.log("RAZORPAY_SECRET :==> ", process.env.RAZORPAY_SECRET);
@@ -24,14 +25,14 @@ export const createOrder = async (
         const user = req.user;
 
         const order = await razorpay.orders.create({
-            amount: 19900,
+            amount: 100,
             currency: "INR",
-            // receipt: `user_${user.id}_${Date.now()}`,
-            // notes: {
-            //     userId: user.id,
-            //     name: user.name,
-            //     email: user.email
-            // }
+            receipt: `u_${user.id}_${Date.now()}`,
+            notes: {
+                userId: user.id,
+                name: user.name,
+                email: user.email
+            }
         });
 
         await Payment.create({
@@ -60,6 +61,7 @@ export const createOrder = async (
 
 
 export const verifyPayment = async (req: Request, res: Response) => {
+    const userId = req.user.id;
     try {
         const {
             razorpay_order_id,
@@ -93,7 +95,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
         const payment = await Payment.findOne({
             orderId: razorpay_order_id,
-            user: req.user.id,
+            user: userId,
         });
 
         if (!payment) {
@@ -118,15 +120,16 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
         await payment.save();
 
-        // await User.findByIdAndUpdate(payment.user, {
-        //     isPremium: true,
-        // });
-        await User.updateOne(
-            { _id: payment.user },
-            {
-                isPremium: true,
-            }
-        );
+        await User.findByIdAndUpdate(payment.user, {
+            isPremium: true,
+        });
+        
+        // await User.updateOne(
+        //     { _id: payment.user },
+        //     {
+        //         isPremium: true,
+        //     }
+        // );
 
         const io = getIO();
 

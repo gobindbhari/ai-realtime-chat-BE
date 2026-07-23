@@ -1,8 +1,8 @@
 import "dotenv/config";
 import Razorpay from "razorpay";
 
-console.log("RAZORPAY_KEY_ID :==> ", process.env.RAZORPAY_KEY_ID);
-console.log("RAZORPAY_SECRET :==> ", process.env.RAZORPAY_SECRET);
+// console.log("RAZORPAY_KEY_ID :==> ", process.env.RAZORPAY_KEY_ID);
+// console.log("RAZORPAY_SECRET :==> ", process.env.RAZORPAY_SECRET);
 
 export const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID!,

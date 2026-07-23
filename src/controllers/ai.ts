@@ -16,7 +16,7 @@ export const aiSummary =  async (req: Request, res: Response) => {
 
     const response = await groq.chat.completions.create({
       // model: "llama-3.3-70b-versatile",
-      model: "gemini-2.0-flash",
+      model: "openai/gpt-oss-120b",
       messages: [
         {
           role: "system",

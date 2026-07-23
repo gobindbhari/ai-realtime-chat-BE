@@ -4,7 +4,7 @@ import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
-import { auth } from "./lib/auth.js";
+import { auth, FRONTEND_URL } from "./lib/auth.js";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { registerChatSocket } from "./lib/server.js";
 import Message from "./models/message.js";
@@ -16,6 +16,7 @@ import { aiSummary } from "./controllers/ai.js";
 import { createOrder, verifyPayment } from "./controllers/payment.js";
 import { requireAuth } from "./middleware/auth.js";
 import { initSocket } from "./lib/socket.js";
+import { authSessionMe } from "./controllers/auth.js";
 
 
 
@@ -24,16 +25,32 @@ dotenv.config();
 await connectDB()
 
 const app = express();
+app.set("trust proxy", 1);
+
+app.use(
+  cors(
+    {
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  },
+)
+);
+
+// ------- better-auth -------
+app.all("/api/auth/*path", toNodeHandler(auth));
+
+app.get("/api/me", authSessionMe);
+
+app.get("/", async (req, res)=>{
+  // res.redirect(`${FRONTEND_URL}`)
+})
+
+// ------- ends better-auth -------
 
 
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    credentials: true,
-  })
-);
+
 
 
 const server = http.createServer(app);
@@ -49,20 +66,6 @@ const io = new Server(server, {
 initSocket(io);
 
 registerChatSocket(io)
-
-
-// ------- better-auth -------
-app.all("/api/auth/*path", toNodeHandler(auth));
-
-app.get( "/api/me", async (req: Request, res: Response) => {
-  const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.headers),
-  });
-  res.json(session);
-  return 
-});
-
-// ------- ends better-auth -------
 
 
 

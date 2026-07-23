@@ -8,9 +8,11 @@ export const requireAuth = async (
   next: NextFunction
 ) => {
   try {
+    console.log("in middleware session run")
     const session = await auth.api.getSession({
       headers: fromNodeHeaders(req.headers),
     });
+    console.log("in middleware session: =>>", session)
 
     if (!session) {
       return res.status(401).json({
